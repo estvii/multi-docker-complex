@@ -1,0 +1,23 @@
+sudo: required
+services: 
+  - docker
+
+before_install:
+  - docker build -t estvii/react-test -f ./client/Dockerfile.dev ./client # our build context is inside the client director
+ # - docker build myother projects
+script:
+  #docker run my otherpoejct test
+  - docker run estvii/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t estvii/multi-client ./client # build context is inside the client, no need for -f
+  - docker build -t estvii/multi-nginx ./nginx
+  - docker build -t estvii/multi-server ./server
+  - docker build -t estvii/multi-worker ./worker
+  # Login in to the docker CLI 
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Takes these images and push them to dockerhub
+  - docker push estvii/multi-client
+  - docker push estvii/multi-nginx
+  - docker push estvii/multi-server
+  - docker push estvii/multi-worker
